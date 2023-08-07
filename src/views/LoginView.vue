@@ -1,24 +1,21 @@
 <template>
   <div class="flex justify-center items-center min-h-screen bg-gray-100">
     <div class="w-full max-w-xs">
-      <div
-        v-if="!registered"
-        class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-      >
-        <h2 class="mb-4 text-xl font-bold">Registration</h2>
-        <!-- Registration Form -->
-        <form @submit.prevent="registerUser">
+      <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <h2 class="mb-4 text-xl font-bold">Login</h2>
+        <!-- Login Form -->
+        <form @submit.prevent="loginUser">
           <!-- Username input -->
           <div class="mb-4">
             <label
               class="block text-gray-700 text-sm font-bold mb-2"
-              for="registerUsername"
+              for="loginUsername"
               >Username</label
             >
             <input
-              v-model="registerData.username"
+              v-model="loginData.username"
               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="registerUsername"
+              id="loginUsername"
               type="text"
               placeholder="Username"
             />
@@ -27,16 +24,19 @@
           <div class="mb-6">
             <label
               class="block text-gray-700 text-sm font-bold mb-2"
-              for="registerPassword"
+              for="loginPassword"
               >Password</label
             >
             <input
-              v-model="registerData.password"
+              v-model="loginData.password"
               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="registerPassword"
+              id="loginPassword"
               type="password"
               placeholder="******************"
             />
+            <p v-if="showError" class="text-red-500 text-xs italic">
+              Invalid username or password.
+            </p>
           </div>
           <!-- Submit button -->
           <div class="flex items-center justify-between">
@@ -44,7 +44,7 @@
               class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               type="submit"
             >
-              Register
+              Login
             </button>
           </div>
         </form>
@@ -59,25 +59,33 @@ import axios from 'axios'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const registerData = reactive({
+const loginData = reactive({
   username: '',
   password: '',
 })
-const registered = ref(false)
+const showError = ref(false)
 
-const registerUser = async () => {
+const loginUser = async () => {
   try {
-    const response = await axios.post('http://localhost:8000/users', {
-      username: registerData.username,
-      password: registerData.password,
+    const response = await axios.get('http://localhost:8000/users', {
+      params: {
+        username: loginData.username,
+        password: loginData.password,
+      },
     })
-    console.log('Registration successful:', response.data)
-    registered.value = true
-    // Redirect to login page after successful registration
-    router.push('/login')
+
+    if (response.data.length > 0) {
+      // User found, perform authentication
+      console.log('Login successful:', response.data[0])
+      // Redirect to the home page after successful login
+      router.push('/')
+    } else {
+      console.log('Login failed: User not found')
+      showError.value = true
+    }
   } catch (error) {
-    console.error('Registration error:', error)
-    // Handle registration error, e.g., display an error message
+    console.error('Login error:', error)
+    // Handle login error, e.g., display an error message
   }
 }
 </script>
